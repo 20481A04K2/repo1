@@ -7,22 +7,30 @@ steps:
       - |
         echo "⏳ Checking if selected triggers are running before starting build..."
 
-        # 👇 List of trigger names to wait for (adjust as needed)
+        # 👇 List of trigger names to wait for
         WATCHED_TRIGGERS=("trigger-2" "trigger-3")
         TRIGGER_PATTERN="$$(IFS=\|; echo "$${WATCHED_TRIGGERS[*]}")"
 
+      
         while true; do
           echo "🔍 Fetching ongoing builds from asia-south1..."
-          ALL_BUILDS=$$(gcloud builds list --region=asia-south1 \
+          # ✅ Only list ongoing builds
+          ALL_BUILDS=$$(gcloud builds list --ongoing --region=asia-south1 \
             --format="value(id,status,substitutions.TRIGGER_NAME)")
 
-          RUNNING_BUILDS=$$(echo "$$ALL_BUILDS" | grep -iE "$$TRIGGER_PATTERN" || true)
+          # Filter by watched triggers, exclude current trigger (avoid deadlock)
+          RUNNING_BUILDS=$$(echo "$$ALL_BUILDS" | grep -iE "$$TRIGGER_PATTERN" | grep -v "$$CURRENT_TRIGGER" || true)
 
           if [[ -z "$$RUNNING_BUILDS" ]]; then
-            echo "✅ None of the watched triggers are running."
+            echo "✅ None of the watched triggers (except current) are running."
 
             # ✅ Now check last build status of each watched trigger
             for TRIGGER in "$${WATCHED_TRIGGERS[@]}"; do
+              if [[ "$$TRIGGER" == "$$CURRENT_TRIGGER" ]]; then
+                echo "⏩ Skipping $$TRIGGER (it's the current build trigger)."
+                continue
+              fi
+
               echo "🔎 Checking latest build status for $$TRIGGER..."
               LATEST_BUILD=$$(gcloud builds list --region=asia-south1 \
                 --filter="substitutions.TRIGGER_NAME=$$TRIGGER" \
@@ -50,7 +58,7 @@ steps:
             break
           fi
 
-          echo "🔄 Found running builds for watched triggers:"
+          echo "🔄 Found running builds for watched triggers (excluding current):"
           echo "$$RUNNING_BUILDS"
           echo "⏱ Waiting 20 seconds before checking again..."
           sleep 20
