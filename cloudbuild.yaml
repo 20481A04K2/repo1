@@ -47,7 +47,7 @@ steps:
     args:
       [
         'build', '-t',
-        'asia-south1-docker.pkg.dev/divine-course-470809-f6/deploy-to-cloudrun/cloudrun-app:${_BUILD_ID}',
+        'asia-south1-docker.pkg.dev/divine-course-470809-f6/deploy-to-cloudrun/cloudrun-app:latest',
         '.'
       ]
 
@@ -56,23 +56,9 @@ steps:
     args:
       [
         'push',
-        'asia-south1-docker.pkg.dev/divine-course-470809-f6/deploy-to-cloudrun/cloudrun-app:${_BUILD_ID}'
+        'asia-south1-docker.pkg.dev/divine-course-470809-f6/deploy-to-cloudrun/cloudrun-app:latest'
       ]
 
-  # Step 4: (Optional) Deploy to Cloud Run for quick testing
-  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
-    entrypoint: gcloud
-    args:
-      [
-        'run', 'deploy', 'cloudrun-app',
-        '--image', 'asia-south1-docker.pkg.dev/divine-course-470809-f6/deploy-to-cloudrun/cloudrun-app:${_BUILD_ID}',
-        '--region', 'asia-south1',
-        '--platform', 'managed',
-        '--allow-unauthenticated'
-      ]
-
-substitutions:
-  _BUILD_ID: "$BUILD_ID"
 
 timeout: 1200s
 options:
