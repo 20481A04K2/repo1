@@ -196,70 +196,68 @@ steps:
           --tags=http-server,https-server,lb-health-check \
           --region=asia-east1
 
-  # ==========================================
-  # Step 7: Rolling update MIG + delete old VMs
-  # ==========================================
-  - name: gcr.io/cloud-builders/gcloud
-    id: update-mig
-    entrypoint: bash
-    args:
-      - -c
-      - |
-        set -e
-        source /workspace/version.env
+# ==========================================
+# Step 7: Rolling update MIG + delete old VMs
+# ==========================================
+- name: gcr.io/cloud-builders/gcloud
+  id: update-mig
+  entrypoint: bash
+  args:
+    - -c
+    - |
+      set -e
+      source /workspace/version.env
 
-        echo "[INFO] MIG Name: ${_MIG_NAME}"
-        echo "[INFO] Zone: ${_ZONE}"
-        echo "[INFO] Template Version: backend-template-$${VERSION_TAG}"
+      echo "[INFO] MIG Name: $${_MIG_NAME}"
+      echo "[INFO] Zone: $${_ZONE}"
+      echo "[INFO] Template Version: backend-template-$${VERSION_TAG}"
 
-        echo "[MIG] Performing rolling update..."
-        gcloud compute instance-groups managed rolling-action start-update \
-          "${_MIG_NAME}" \
-          --zone="${_ZONE}" \
-          --version="template=backend-template-$${VERSION_TAG}" \
-          --minimal-action=replace \
-          --max-surge=1 \
-          --max-unavailable=0
+      echo "[MIG] Performing rolling update..."
+      gcloud compute instance-groups managed rolling-action start-update \
+        "$${_MIG_NAME}" \
+        --zone="$${_ZONE}" \
+        --version="template=backend-template-$${VERSION_TAG}" \
+        --minimal-action=replace \
+        --max-surge=1 \
+        --max-unavailable=0
 
-        echo "[WAIT] Waiting until at least one VM with the new template is RUNNING..."
-        ATTEMPTS=0
-        MAX_ATTEMPTS=30   # 30 attempts × 10s = max 5 min wait
+      echo "[WAIT] Waiting until at least one VM with the new template is RUNNING..."
+      ATTEMPTS=0
+      MAX_ATTEMPTS=30   # 30 attempts × 10s = max 5 min wait
 
-        while true; do
-          NEW_VM=$(gcloud compute instance-groups managed list-instances "${_MIG_NAME}" \
-            --zone="${_ZONE}" \
-            --format="value(instance.basename(),version.template)" \
-            | grep "backend-template-$${VERSION_TAG}" || true)
+      while true; do
+        NEW_VM=$(gcloud compute instance-groups managed list-instances "$${_MIG_NAME}" \
+          --zone="$${_ZONE}" \
+          --format="value(instance.basename(),version.template)" \
+          | grep "backend-template-$${VERSION_TAG}" || true)
 
-          if [[ -n "$$NEW_VM" ]]; then
-            RUNNING_VM=$(echo "$$NEW_VM" | awk '{print $$1}' | xargs -I{} gcloud compute instances describe {} \
-              --zone="${_ZONE}" \
-              --format="value(status)" | grep "RUNNING" || true)
+        if [[ -n "$$NEW_VM" ]]; then
+          RUNNING_VM=$(echo "$$NEW_VM" | awk '{print $$1}' | xargs -I{} gcloud compute instances describe {} \
+            --zone="$${_ZONE}" \
+            --format="value(status)" | grep "RUNNING" || true)
 
-            if [[ "$$RUNNING_VM" == "RUNNING" ]]; then
-              echo "[SUCCESS] Found a RUNNING VM with new template: $$NEW_VM"
-              break
-            fi
-          fi
-
-          ATTEMPTS=$$((ATTEMPTS+1))
-          if [[ $$ATTEMPTS -ge $$MAX_ATTEMPTS ]]; then
-            echo "[WARNING] Timed out waiting for a new VM to be RUNNING. Proceeding anyway."
+          if [[ "$$RUNNING_VM" == "RUNNING" ]]; then
+            echo "[SUCCESS] Found a RUNNING VM with new template: $$NEW_VM"
             break
           fi
-          echo "[WAIT] Attempt $$ATTEMPTS/$$MAX_ATTEMPTS - No RUNNING VM found yet. Retrying in 10s..."
-          sleep 10
-        done
+        fi
 
-        echo "[CLEANUP] Deleting old instances (force)..."
-        OLD_INSTANCES=$(gcloud compute instance-groups managed list-instances "${_MIG_NAME}" \
-          --zone="${_ZONE}" --format="value(instance.basename())")
-        for VM in $$OLD_INSTANCES; do
-          echo "[DELETE] Deleting old instance: $$VM"
-          gcloud compute instances delete $$VM --zone="$${_ZONE}" --quiet --delete-disks=all || true
-        done
+        ATTEMPTS=$$((ATTEMPTS+1))
+        if [[ $$ATTEMPTS -ge $$MAX_ATTEMPTS ]]; then
+          echo "[WARNING] Timed out waiting for a new VM to be RUNNING. Proceeding anyway."
+          break
+        fi
+        echo "[WAIT] Attempt $$ATTEMPTS/$$MAX_ATTEMPTS - No RUNNING VM found yet. Retrying in 10s..."
+        sleep 10
+      done
 
-
+      echo "[CLEANUP] Deleting old instances (force)..."
+      OLD_INSTANCES=$(gcloud compute instance-groups managed list-instances "$${_MIG_NAME}" \
+        --zone="$${_ZONE}" --format="value(instance.basename())")
+      for VM in $$OLD_INSTANCES; do
+        echo "[DELETE] Deleting old instance: $$VM"
+        gcloud compute instances delete $$VM --zone="$${_ZONE}" --quiet --delete-disks=all || true
+      done
 
 options:
   logging: CLOUD_LOGGING_ONLY
@@ -268,4 +266,3 @@ substitutions:
   _MIG_NAME: "vamsi-mig"
   _ZONE: "asia-east1-b"
   _GITHUB_REPO: "20481A04K2/repo1"
-
