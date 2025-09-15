@@ -208,7 +208,7 @@ steps:
         MIG_NAME="${_MIG_NAME}"
         ZONE="${_ZONE}"
         LATEST_TEMPLATE="backend-template-$${VERSION_TAG}"
-
+        echo "$$MIG"
         echo "[MIG] Performing rolling update with template: $$LATEST_TEMPLATE"
         gcloud compute instance-groups managed rolling-action start-update \
           "$$MIG_NAME" \
