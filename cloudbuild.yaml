@@ -13,7 +13,7 @@ steps:
         CURRENT_TRIGGER="$${_TRIGGER_NAME:-trigger-1}"
         echo "Current Trigger: $$CURRENT_TRIGGER"
 
-        CURRENT_BUILD_INFO=$$(gcloud builds list --region=asia-east1-b \
+        CURRENT_BUILD_INFO=$$(gcloud builds list --region=asia-east1 \
           --filter="status:(WORKING OR QUEUED) AND substitutions.TRIGGER_NAME=$$CURRENT_TRIGGER" \
           --sort-by="~createTime" --limit=1 \
           --format="value(id,createTime)")
@@ -32,7 +32,7 @@ steps:
           if [[ "$$TRIGGER" == "$$CURRENT_TRIGGER" ]]; then
             continue
           fi
-          LATEST_BUILD=$$(gcloud builds list --region=asia-east1-b \
+          LATEST_BUILD=$$(gcloud builds list --region=asia-east1 \
             --filter="status:(WORKING OR QUEUED) AND substitutions.TRIGGER_NAME=$$TRIGGER" \
             --sort-by="~createTime" --limit=1 \
             --format="value(id,createTime)")
@@ -151,7 +151,7 @@ steps:
           --network=crested-polygon-472204-n5 \
           --subnet=singapore-subnet \
           --tags=http-server,https-server,lb-health-check \
-          --region=asia-east1-b
+          --region=asia-east1
 
   # ==========================================
   # Step 7: Rolling update MIG + delete old VMs
@@ -183,5 +183,5 @@ options:
 substitutions:
   _TRIGGER_NAME: "trigger-1"
   _MIG_NAME: "vamsi-mig"
-  _ZONE: "asia-east1-b"
+  _ZONE: "asia-east1"
   _GITHUB_REPO: "https://github.com/20481A04K2/repo1.git"
