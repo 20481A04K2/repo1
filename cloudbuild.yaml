@@ -205,18 +205,18 @@ steps:
         source /workspace/version.env
 
         echo "[DEBUG] ==== MIG Rolling Update Debugging ===="
-        echo "[DEBUG] MIG Name: $${_MIG_NAME}"
-        echo "[DEBUG] Zone: $${_ZONE}"
+        echo "[DEBUG] MIG Name: ${_MIG_NAME}"
+        echo "[DEBUG] Zone: ${_ZONE}"
         echo "[DEBUG] Template Version: backend-template-$${VERSION_TAG}"
 
         echo "[DEBUG] Listing current MIG instances before update..."
-        gcloud compute instance-groups managed list-instances "$${_MIG_NAME}" \
-          --zone="$${_ZONE}" --format="table(instance.basename(),version.template,status)"
+        gcloud compute instance-groups managed list-instances "${_MIG_NAME}" \
+          --zone="${_ZONE}" --format="table(instance.basename(),version.template,status)"
 
         echo "[MIG] Performing rolling update..."
         gcloud compute instance-groups managed rolling-action start-update \
-          "$${_MIG_NAME}" \
-          --zone="$${_ZONE}" \
+          "${_MIG_NAME}" \
+          --zone="${_ZONE}" \
           --version="template=backend-template-$${VERSION_TAG}" \
           --minimal-action=replace \
           --max-surge=1 \
@@ -227,43 +227,43 @@ steps:
         MAX_ATTEMPTS=30
 
         while true; do
-          NEW_VM=$$(gcloud compute instance-groups managed list-instances "$${_MIG_NAME}" \
-            --zone="$${_ZONE}" \
+          NEW_VM=$(gcloud compute instance-groups managed list-instances "${_MIG_NAME}" \
+            --zone="${_ZONE}" \
             --format="value(instance.basename(),version.template)" \
             | grep "backend-template-$${VERSION_TAG}" || true)
 
-          if [[ -n "$$NEW_VM" ]]; then
-            RUNNING_VM=$$(echo "$$NEW_VM" | awk '{print $$1}' | xargs -I{} gcloud compute instances describe {} \
-              --zone="$${_ZONE}" --format="value(status)" | grep "RUNNING" || true)
-            if [[ "$$RUNNING_VM" == "RUNNING" ]]; then
+          if [[ -n "$NEW_VM" ]]; then
+            RUNNING_VM=$(echo "$$NEW_VM" | awk '{print $1}' | xargs -I{} gcloud compute instances describe {} \
+              --zone="${_ZONE}" --format="value(status)" | grep "RUNNING" || true)
+            if [[ "$RUNNING_VM" == "RUNNING" ]]; then
               echo "[SUCCESS] Found a RUNNING VM with new template: $$RUNNING_VM"
               break
             fi
           fi
 
-          ATTEMPTS=$$((ATTEMPTS+1))
-          if [[ $$ATTEMPTS -ge $$MAX_ATTEMPTS ]]; then
+          ATTEMPTS=$((ATTEMPTS+1))
+          if [[ $ATTEMPTS -ge $MAX_ATTEMPTS ]]; then
             echo "[WARNING] Timed out waiting for a new VM to be RUNNING. Proceeding anyway."
             break
           fi
-          echo "[WAIT] Attempt $$ATTEMPTS/$$MAX_ATTEMPTS - No RUNNING VM yet. Retrying in 10s..."
+          echo "[WAIT] Attempt $ATTEMPTS/$MAX_ATTEMPTS - No RUNNING VM yet. Retrying in 10s..."
           sleep 10
         done
 
         echo "[CLEANUP] Finding old instances (not using new template)..."
-        OLD_INSTANCES=$$(gcloud compute instance-groups managed list-instances "$${_MIG_NAME}" \
-          --zone="$${_ZONE}" \
+        OLD_INSTANCES=$(gcloud compute instance-groups managed list-instances "${_MIG_NAME}" \
+          --zone="${_ZONE}" \
           --format="value(instance.basename(),version.template)" \
           | grep -v "backend-template-$${VERSION_TAG}" \
-          | awk '{print $$1}' || true)
+          | awk '{print $1}' || true)
 
-        if [[ -z "$$OLD_INSTANCES" ]]; then
+        if [[ -z "$OLD_INSTANCES" ]]; then
           echo "[CLEANUP] No old instances found — nothing to delete."
         else
-          echo "[CLEANUP] Deleting old instances: $$OLD_INSTANCES"
-          for VM in $$OLD_INSTANCES; do
+          echo "[CLEANUP] Deleting old instances: $OLD_INSTANCES"
+          for VM in $OLD_INSTANCES; do
             echo "[DELETE] Deleting old instance: $$VM"
-            gcloud compute instances delete $$VM --zone="$${_ZONE}" --quiet --delete-disks=all || true
+            gcloud compute instances delete $VM --zone="${_ZONE}" --quiet --delete-disks=all || true
           done
         fi
 
