@@ -226,18 +226,30 @@ steps:
       MAX_ATTEMPTS=30   # 30 attempts × 10s = max 5 min wait
 
       while true; do
+        echo "-------------------------------"
+        echo "[DEBUG] Listing MIG instances (attempt $$ATTEMPTS):"
+        gcloud compute instance-groups managed list-instances "$${_MIG_NAME}" \
+          --zone="$${_ZONE}" \
+          --format="table(instance.basename(),version.template,status)"
+
         NEW_VM=$$(gcloud compute instance-groups managed list-instances "$${_MIG_NAME}" \
           --zone="$${_ZONE}" \
           --format="value(instance.basename(),version.template)" \
           | grep "backend-template-$${VERSION_TAG}" || true)
 
-        if [[ -n "$$NEW_VM" ]]; then
-          RUNNING_VM=$$(echo "$$NEW_VM" | awk '{print $$1}' | xargs -I{} gcloud compute instances describe {} \
-            --zone="$${_ZONE}" \
-            --format="value(status)" | grep "RUNNING" || true)
+        echo "[DEBUG] Matched VMs with new template:"
+        echo "$$NEW_VM" || echo "[DEBUG] No matching VM found yet."
 
-          if [[ "$$RUNNING_VM" == "RUNNING" ]]; then
-            echo "[SUCCESS] Found a RUNNING VM with new template: $$NEW_VM"
+        if [[ -n "$$NEW_VM" ]]; then
+          FIRST_VM_NAME=$$(echo "$$NEW_VM" | awk '{print $$1}')
+          echo "[DEBUG] Checking status of VM: $$FIRST_VM_NAME"
+          VM_STATUS=$$(gcloud compute instances describe $$FIRST_VM_NAME \
+            --zone="$${_ZONE}" \
+            --format="value(status)" || true)
+          echo "[DEBUG] VM $$FIRST_VM_NAME status: $$VM_STATUS"
+
+          if [[ "$$VM_STATUS" == "RUNNING" ]]; then
+            echo "[SUCCESS] Found a RUNNING VM with new template: $$FIRST_VM_NAME"
             break
           fi
         fi
@@ -258,6 +270,7 @@ steps:
         echo "[DELETE] Deleting old instance: $$VM"
         gcloud compute instances delete $$VM --zone="$${_ZONE}" --quiet --delete-disks=all || true
       done
+
 
 options:
   logging: CLOUD_LOGGING_ONLY
