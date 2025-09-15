@@ -211,7 +211,7 @@ steps:
           ${_MIG_NAME} \
           --zone=${_ZONE} \
           --version "template=backend-template-$$VERSION_TAG" \
-          --minimal-action=restart \
+          --minimal-action=replace \
           --max-surge=1 \
           --max-unavailable=1
         echo "[WAIT] Sleeping for 60 seconds before cleanup to let new VMs stabilize..."
