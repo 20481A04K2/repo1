@@ -9,11 +9,11 @@ steps:
       - |
         echo "Checking current trigger against actively running triggers..."
 
-        WATCHED_TRIGGERS=("analytics" "byf-ai-service" "communication-broadcast" "content-engine" "dap-engine" "integrations" "nudge" "reinforcementmodule" "usermanagement")
-        CURRENT_TRIGGER="$${_TRIGGER_NAME:-analytics}"
+        WATCHED_TRIGGERS=("trigger-2" "trigger-3" )
+        CURRENT_TRIGGER="$${_TRIGGER_NAME:-trigger-1}"
         echo "Current Trigger: $$CURRENT_TRIGGER"
 
-        CURRENT_BUILD_INFO=$$(gcloud builds list --region=asia-southeast1 \
+        CURRENT_BUILD_INFO=$$(gcloud builds list --region=asia-east1-b \
           --filter="status:(WORKING OR QUEUED) AND substitutions.TRIGGER_NAME=$$CURRENT_TRIGGER" \
           --sort-by="~createTime" --limit=1 \
           --format="value(id,createTime)")
@@ -32,7 +32,7 @@ steps:
           if [[ "$$TRIGGER" == "$$CURRENT_TRIGGER" ]]; then
             continue
           fi
-          LATEST_BUILD=$$(gcloud builds list --region=asia-southeast1 \
+          LATEST_BUILD=$$(gcloud builds list --region=asia-east1-b \
             --filter="status:(WORKING OR QUEUED) AND substitutions.TRIGGER_NAME=$$TRIGGER" \
             --sort-by="~createTime" --limit=1 \
             --format="value(id,createTime)")
@@ -126,7 +126,7 @@ steps:
           --source-disk=$$BOOT_DISK \
           --source-disk-zone=${_ZONE} \
           --family=backend-family \
-          --project=byf-dev \
+          --project=crested-polygon-472204-n5 \
           --force
 
   # ==========================================
@@ -141,17 +141,17 @@ steps:
         source /workspace/version.env
         echo "[GCE] Creating instance template..."
         gcloud compute instance-templates create backend-template-$$VERSION_TAG \
-          --project=byf-dev \
+          --project=crested-polygon-472204-n5 \
           --machine-type=n2-standard-2 \
           --image=backend-image-$$VERSION_TAG \
-          --image-project=byf-dev \
-          --service-account=99002782337-compute@developer.gserviceaccount.com \
+          --image-project=crested-polygon-472204-n5 \
+          --service-account=613125347481-compute@developer.gserviceaccount.com \
           --scopes=https://www.googleapis.com/auth/cloud-platform \
           --metadata-from-file=startup-script=startup-script.sh \
-          --network=byf-dev \
+          --network=crested-polygon-472204-n5 \
           --subnet=singapore-subnet \
           --tags=http-server,https-server,lb-health-check \
-          --region=asia-southeast1
+          --region=asia-east1-b
 
   # ==========================================
   # Step 7: Rolling update MIG + delete old VMs
@@ -181,7 +181,7 @@ steps:
 options:
   logging: CLOUD_LOGGING_ONLY
 substitutions:
-  _TRIGGER_NAME: "trigger-3"
-  _MIG_NAME: "dev-backend"
-  _ZONE: "asia-southeast1-b"
-  _GITHUB_REPO: "your-username/your-flask-repo"
+  _TRIGGER_NAME: "trigger-1"
+  _MIG_NAME: "vamsi-mig"
+  _ZONE: "asia-east1-b"
+  _GITHUB_REPO: "https://github.com/20481A04K2/repo1.git"
