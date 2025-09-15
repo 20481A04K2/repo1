@@ -226,14 +226,14 @@ steps:
         MAX_ATTEMPTS=30   # 30 attempts × 10s = max 5 min wait
 
         while true; do
-          NEW_VM=$$(gcloud compute instance-groups managed list-instances "${_MIG_NAME}" \
+          NEW_VM=$(gcloud compute instance-groups managed list-instances "${_MIG_NAME}" \
             --zone="${_ZONE}" \
             --format="value(instance.basename(),version.template)" \
             | grep "backend-template-$${VERSION_TAG}" || true)
 
           if [[ -n "$$NEW_VM" ]]; then
-            RUNNING_VM=$$(echo "$$NEW_VM" | awk '{print $$1}' | xargs -I{} gcloud compute instances describe {} \
-              --zone="$${_ZONE}" \
+            RUNNING_VM=$(echo "$$NEW_VM" | awk '{print $$1}' | xargs -I{} gcloud compute instances describe {} \
+              --zone="${_ZONE}" \
               --format="value(status)" | grep "RUNNING" || true)
 
             if [[ "$$RUNNING_VM" == "RUNNING" ]]; then
