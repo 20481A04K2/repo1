@@ -212,8 +212,8 @@ steps:
           --zone=${_ZONE} \
           --version "template=backend-template-$$VERSION_TAG" \
           --minimal-action=replace \
-          --max-surge=0 \
-          --max-unavailable=1
+          --max-surge=1 \
+          --max-unavailable=0
         echo "[WAIT] Sleeping for 60 seconds before cleanup to let new VMs stabilize..."
         sleep 60
         echo "[CLEANUP] Deleting old instances (force)..."
