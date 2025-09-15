@@ -207,7 +207,7 @@ steps:
         # Explicitly set MIG name and zone
         MIG_NAME="$${_MIG_NAME}"
         ZONE="$${_ZONE}"
-        LATEST_TEMPLATE="$${backend-template-$${VERSION_TAG}}"
+        LATEST_TEMPLATE="backend-template-$${VERSION_TAG}"
 
         echo "[MIG] Performing rolling update with template: $$LATEST_TEMPLATE"
         gcloud compute instance-groups managed rolling-action start-update \
@@ -218,7 +218,7 @@ steps:
           --max-surge=1 \
           --max-unavailable=0
 
-        echo "[WAIT] Waiting for at least one healthy VM from new template ($LATEST_TEMPLATE)..."
+        echo "[WAIT] Waiting for at least one healthy VM from new template ($$LATEST_TEMPLATE)..."
         ATTEMPTS=0
         MAX_ATTEMPTS=30
 
