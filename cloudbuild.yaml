@@ -183,5 +183,5 @@ options:
 substitutions:
   _TRIGGER_NAME: "trigger-1"
   _MIG_NAME: "vamsi-mig"
-  _ZONE: "asia-east1"
+  _ZONE: "asia-east1-b"
   _GITHUB_REPO: "20481A04K2/repo1"
