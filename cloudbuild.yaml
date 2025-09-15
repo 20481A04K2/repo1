@@ -270,8 +270,6 @@ steps:
         gcloud compute instances delete $$VM --zone="$${_ZONE}" --quiet --delete-disks=all || true
       done
 
-
-
 options:
   logging: CLOUD_LOGGING_ONLY
 substitutions:
@@ -279,3 +277,4 @@ substitutions:
   _MIG_NAME: "vamsi-mig"
   _ZONE: "asia-east1-b"
   _GITHUB_REPO: "20481A04K2/repo1"
+
