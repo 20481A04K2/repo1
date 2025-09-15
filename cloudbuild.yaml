@@ -207,11 +207,16 @@ steps:
       - |
         set -e
         source /workspace/version.env
+
+        echo "[INFO] MIG Name: $${_MIG_NAME}"
+        echo "[INFO] Zone: $${_ZONE}"
+        echo "[INFO] Template Version: backend-template-$${VERSION_TAG}"
+
         echo "[MIG] Performing rolling update..."
         gcloud compute instance-groups managed rolling-action start-update \
-          $${_MIG_NAME} \
-          --zone=$${_ZONE} \
-          --version "template=backend-template-$${VERSION_TAG}" \
+          "$${_MIG_NAME}" \
+          --zone="$${_ZONE}" \
+          --version="template=backend-template-$${VERSION_TAG}" \
           --minimal-action=replace \
           --max-surge=1 \
           --max-unavailable=0
@@ -219,14 +224,16 @@ steps:
         echo "[WAIT] Waiting until at least one VM with the new template is RUNNING..."
         ATTEMPTS=0
         MAX_ATTEMPTS=30   # 30 attempts × 10s = max 5 min wait
+
         while true; do
-          NEW_VM=$$(gcloud compute instance-groups managed list-instances $${_MIG_NAME} \
-            --zone=$${_ZONE} \
-            --format="value(instance.basename(),version.template)" | grep "backend-template-$${VERSION_TAG}" || true)
+          NEW_VM=$$(gcloud compute instance-groups managed list-instances "$${_MIG_NAME}" \
+            --zone="$${_ZONE}" \
+            --format="value(instance.basename(),version.template)" \
+            | grep "backend-template-$${VERSION_TAG}" || true)
 
           if [[ -n "$$NEW_VM" ]]; then
             RUNNING_VM=$$(echo "$$NEW_VM" | awk '{print $$1}' | xargs -I{} gcloud compute instances describe {} \
-              --zone=$${_ZONE} \
+              --zone="$${_ZONE}" \
               --format="value(status)" | grep "RUNNING" || true)
 
             if [[ "$$RUNNING_VM" == "RUNNING" ]]; then
@@ -245,11 +252,11 @@ steps:
         done
 
         echo "[CLEANUP] Deleting old instances (force)..."
-        OLD_INSTANCES=$$(gcloud compute instance-groups managed list-instances $${_MIG_NAME} \
-          --zone=$${_ZONE} --format="value(instance.basename())")
+        OLD_INSTANCES=$$(gcloud compute instance-groups managed list-instances "$${_MIG_NAME}" \
+          --zone="$${_ZONE}" --format="value(instance.basename())")
         for VM in $$OLD_INSTANCES; do
           echo "[DELETE] Deleting old instance: $$VM"
-          gcloud compute instances delete $$VM --zone=$${_ZONE} --quiet --delete-disks=all || true
+          gcloud compute instances delete $$VM --zone="$${_ZONE}" --quiet --delete-disks=all || true
         done
 
 
