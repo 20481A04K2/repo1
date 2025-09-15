@@ -205,8 +205,8 @@ steps:
         source /workspace/version.env
 
         # Explicitly set MIG name and zone
-        MIG_NAME="vamsi-mig"
-        ZONE="asia-east1-b"
+        MIG_NAME="$${_MIG_NAME}"
+        ZONE="$${_ZONE}"
         LATEST_TEMPLATE="backend-template-$${VERSION_TAG}"
 
         echo "[MIG] Performing rolling update with template: $$LATEST_TEMPLATE"
@@ -227,7 +227,7 @@ steps:
           READY_VM=$$(gcloud compute instance-groups managed list-instances "$$MIG_NAME" \
             --zone="$$ZONE" \
             --format="value(name,version.instanceTemplate.basename(),currentAction,healthState)" \
-            | awk -v tmpl="$$LATEST_TEMPLATE" '$$2==tmpl && $$3=="NONE" {print $$1}' | head -n1)
+            | awk -v tmpl="$$LATEST_TEMPLATE" '$$2==tmpl && $$3=="NONE" {print $1}' | head -n1)
 
           if [[ -n "$$READY_VM" ]]; then
             echo "[SUCCESS] Found healthy RUNNING VM from new template: $$READY_VM"
@@ -248,7 +248,7 @@ steps:
         OLD_INSTANCES=$$(gcloud compute instance-groups managed list-instances "$$MIG_NAME" \
           --zone="$$ZONE" \
           --format="value(name,version.instanceTemplate.basename())" \
-          | awk -v tmpl="$$LATEST_TEMPLATE" '$$2!=tmpl {print $$1}')
+          | awk -v tmpl="$$LATEST_TEMPLATE" '$$2!=tmpl {print $1}')
 
         if [[ -z "$$OLD_INSTANCES" ]]; then
           echo "[CLEANUP] No old instances found — nothing to delete."
