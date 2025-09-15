@@ -207,13 +207,13 @@ steps:
         # Explicitly set MIG name and zone
         MIG_NAME="vamsi-mig"
         ZONE="asia-east1-b"
-        LATEST_TEMPLATE="backend-template-${VERSION_TAG}"
+        LATEST_TEMPLATE="backend-template-$${VERSION_TAG}"
 
-        echo "[MIG] Performing rolling update with template: $LATEST_TEMPLATE"
+        echo "[MIG] Performing rolling update with template: $$LATEST_TEMPLATE"
         gcloud compute instance-groups managed rolling-action start-update \
-          "$MIG_NAME" \
-          --zone="$ZONE" \
-          --version="template=$LATEST_TEMPLATE" \
+          "$$MIG_NAME" \
+          --zone="$$ZONE" \
+          --version="template=$$LATEST_TEMPLATE" \
           --minimal-action=replace \
           --max-surge=1 \
           --max-unavailable=0
@@ -224,39 +224,39 @@ steps:
 
         while true; do
           # Check if any VM from the new template is running and action is NONE (ready)
-          READY_VM=$(gcloud compute instance-groups managed list-instances "$MIG_NAME" \
-            --zone="$ZONE" \
+          READY_VM=$$(gcloud compute instance-groups managed list-instances "$$MIG_NAME" \
+            --zone="$$ZONE" \
             --format="value(name,version.instanceTemplate.basename(),currentAction,healthState)" \
-            | awk -v tmpl="$LATEST_TEMPLATE" '$2==tmpl && $3=="NONE" {print $1}' | head -n1)
+            | awk -v tmpl="$$LATEST_TEMPLATE" '$$2==tmpl && $$3=="NONE" {print $$1}' | head -n1)
 
-          if [[ -n "$READY_VM" ]]; then
-            echo "[SUCCESS] Found healthy RUNNING VM from new template: $READY_VM"
+          if [[ -n "$$READY_VM" ]]; then
+            echo "[SUCCESS] Found healthy RUNNING VM from new template: $$READY_VM"
             break
           fi
 
-          ATTEMPTS=$((ATTEMPTS+1))
-          if [[ $ATTEMPTS -ge $MAX_ATTEMPTS ]]; then
-            echo "[WARNING] Timed out waiting for new VM from template $LATEST_TEMPLATE. Proceeding to cleanup."
+          ATTEMPTS=$$((ATTEMPTS+1))
+          if [[ $$ATTEMPTS -ge $$MAX_ATTEMPTS ]]; then
+            echo "[WARNING] Timed out waiting for new VM from template $$LATEST_TEMPLATE. Proceeding to cleanup."
             break
           fi
 
-          echo "[WAIT] Attempt $ATTEMPTS/$MAX_ATTEMPTS - No ready VM yet. Retrying in 10s..."
+          echo "[WAIT] Attempt $$ATTEMPTS/$$MAX_ATTEMPTS - No ready VM yet. Retrying in 10s..."
           sleep 10
         done
 
         echo "[CLEANUP] Deleting old instances (not using new template)..."
-        OLD_INSTANCES=$(gcloud compute instance-groups managed list-instances "$MIG_NAME" \
-          --zone="$ZONE" \
+        OLD_INSTANCES=$$(gcloud compute instance-groups managed list-instances "$$MIG_NAME" \
+          --zone="$$ZONE" \
           --format="value(name,version.instanceTemplate.basename())" \
-          | awk -v tmpl="$LATEST_TEMPLATE" '$2!=tmpl {print $1}')
+          | awk -v tmpl="$$LATEST_TEMPLATE" '$$2!=tmpl {print $$1}')
 
-        if [[ -z "$OLD_INSTANCES" ]]; then
+        if [[ -z "$$OLD_INSTANCES" ]]; then
           echo "[CLEANUP] No old instances found — nothing to delete."
         else
-          echo "[CLEANUP] Deleting old instances: $OLD_INSTANCES"
-          for VM in $OLD_INSTANCES; do
-            echo "[DELETE] Deleting old instance: $VM"
-            gcloud compute instances delete "$VM" --zone="$ZONE" --quiet --delete-disks=all || true
+          echo "[CLEANUP] Deleting old instances: $$OLD_INSTANCES"
+          for VM in $$OLD_INSTANCES; do
+            echo "[DELETE] Deleting old instance: $$VM"
+            gcloud compute instances delete "$$VM" --zone="$$ZONE" --quiet --delete-disks=all || true
           done
         fi
 
