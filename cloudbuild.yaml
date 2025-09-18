@@ -133,6 +133,7 @@ steps:
         echo "Installing Python and dependencies..."
         sudo apt-get update -y
         sudo apt-get install -y python3 python3-pip unzip curl
+        mkdir -p /home/ubuntu
         cd /home/ubuntu
         mkdir -p flask-app
         cp /workspace/app/* flask-app/
