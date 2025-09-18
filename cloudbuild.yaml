@@ -138,6 +138,7 @@ steps:
         git clone https://github.com/20481A04K2/repo1.git .
         python3 -m venv venv
         source venv/bin/activate
+        sleep 2
         echo "Installing Flask..."
         pip install --upgrade pip
         pip install flask
