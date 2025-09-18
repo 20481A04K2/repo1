@@ -151,11 +151,11 @@ steps:
         fi
         # Trigger Cloud Function with status
         CLOUD_FUNCTION_URL="https://startup-email-service-99002782337.asia-southeast1.run.app"
-        curl -s -X POST "$CLOUD_FUNCTION_URL" \
+        curl -s -X POST "$$CLOUD_FUNCTION_URL" \
         -H "Content-Type: application/json" \
-        -d "{\"status\":\"$STATUS\", \"vm\":\"$(hostname)\", \"pipeline\":\"my-pipeline\"}"
+        -d "{\"status\":\"$$STATUS\", \"vm\":\"$$(hostname)\", \"pipeline\":\"my-pipeline\"}"
         # Exit with proper code for Cloud Build
-        if [[ "$STATUS" == "failure" ]]; then
+        if [[ "$$STATUS" == "failure" ]]; then
           exit 1
         fi
         EOF
