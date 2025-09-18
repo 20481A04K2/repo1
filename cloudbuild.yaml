@@ -286,7 +286,7 @@ steps:
         echo "Polling Cloud Function for VM startup status..."
         for i in {1..30}; do
           RESPONSE=$$(curl -s https://function-613125347481.asia-south1.run.app)
-          STATUS=$(echo $RESPONSE | grep -oP '"status":"\K[^"]+')
+          STATUS=$$(echo $$RESPONSE | grep -oP '"status":"\K[^"]+')
           if [[ "$$STATUS" == "success" ]]; then
             echo "✅ Deployment SUCCESS"
             exit 0
