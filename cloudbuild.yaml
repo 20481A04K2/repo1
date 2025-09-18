@@ -31,7 +31,7 @@ steps:
 
         echo "⏰ Current build $$CURRENT_BUILD_ID started at: $$CURRENT_START_TIME"
         # Store current trigger & start time & watched triggers for Step 4.5
-        echo "$CURRENT_TRIGGER|$CURRENT_START_TIME|${_WATCHED_TRIGGERS}" > /workspace/trigger-info.txt
+        echo "$$CURRENT_TRIGGER|$$CURRENT_START_TIME|$${_WATCHED_TRIGGERS}" > /workspace/trigger-info.txt
 
         # Function to wait for a build to finish
         wait_for_build() {
