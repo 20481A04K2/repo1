@@ -277,7 +277,7 @@ steps:
   # ==========================================
   # Step 8: Poll Cloud Function for VM startup status
   # ==========================================
-  - name: 'gcr.io/cloud-builders/bash'
+  - name: gcr.io/cloud-builders/gcloud
     id: check-cloud-function
     entrypoint: bash
     args:
