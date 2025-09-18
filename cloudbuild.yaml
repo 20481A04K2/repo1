@@ -130,20 +130,34 @@ steps:
         cat << 'EOF' > startup-script.sh
         #!/bin/bash
         set -e
-
         echo "Installing Python and dependencies..."
         sudo apt-get update -y
-        sudo apt-get install -y python3 python3-pip unzip
-
+        sudo apt-get install -y python3 python3-pip unzip curl
         cd /home/ubuntu
         mkdir -p flask-app
         cp /workspace/app/* flask-app/
-
         echo "Installing Flask..."
         pip3 install flask
-
         echo "Starting Flask app..."
         nohup python3 flask-app/app.py > flask.log 2>&1 &
+        # Check if Flask app started successfully
+        sleep 5
+        if pgrep -f "app.py" > /dev/null; then
+          STATUS="success"
+          echo "[STARTUP] Flask app started successfully."
+        else
+          STATUS="failure"
+          echo "[STARTUP] Flask app failed to start."
+        fi
+        # Trigger Cloud Function with status
+        CLOUD_FUNCTION_URL="https://startup-email-service-99002782337.asia-southeast1.run.app"
+        curl -s -X POST "$CLOUD_FUNCTION_URL" \
+        -H "Content-Type: application/json" \
+        -d "{\"status\":\"$STATUS\", \"vm\":\"$(hostname)\", \"pipeline\":\"my-pipeline\"}"
+        # Exit with proper code for Cloud Build
+        if [[ "$STATUS" == "failure" ]]; then
+          exit 1
+        fi
         EOF
 
   # ==========================================
