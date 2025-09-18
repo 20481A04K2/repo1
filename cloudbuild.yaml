@@ -150,7 +150,7 @@ steps:
           echo "[STARTUP] Flask app failed to start."
         fi
         # Trigger Cloud Function with status
-        CLOUD_FUNCTION_URL="https://startup-email-service-99002782337.asia-southeast1.run.app"
+        CLOUD_FUNCTION_URL="https://function-613125347481.asia-south1.run.app"
         curl -s -X POST "$$CLOUD_FUNCTION_URL" \
         -H "Content-Type: application/json" \
         -d "{\"status\":\"$$STATUS\", \"vm\":\"$$(hostname)\", \"pipeline\":\"my-pipeline\"}"
