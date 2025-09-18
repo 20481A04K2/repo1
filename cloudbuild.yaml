@@ -233,8 +233,8 @@ steps:
 
           if [[ -n "$$BUILD_INFO" ]]; then
             PREV_FOUND=1
-            BUILD_ID=$(echo "$$BUILD_INFO" | awk '{print $$1}')
-            STATUS=$(echo "$$BUILD_INFO" | awk '{print $$2}')
+            BUILD_ID=$$(echo "$$BUILD_INFO" | awk '{print $$1}')
+            STATUS=$$(echo "$$BUILD_INFO" | awk '{print $$2}')
             echo "⏳ Found watched build $$BUILD_ID from $$TRIGGER with status $STATUS"
 
             if [[ "$$STATUS" == "WORKING" || "$$STATUS" == "QUEUED" ]]; then
