@@ -163,7 +163,51 @@ steps:
           exit 1
         fi
         EOF
+  # ==========================================
+  # Step 4.5: Wait for previously running triggers before image creation
+  # ==========================================
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    id: wait-before-image
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        echo "⏳ Checking for earlier running triggers before image creation..."
+        WATCHED_TRIGGERS=("trigger-2" "trigger-3")
+        CURRENT_TRIGGER="$${_TRIGGER_NAME:-trigger-1}"
 
+        for TRIGGER in "$${WATCHED_TRIGGERS[@]}"; do
+          if [[ "$$TRIGGER" == "$$CURRENT_TRIGGER" ]]; then
+            continue
+          fi
+
+          BUILD_INFO=$$(gcloud builds list --region=asia-east1 \
+            --filter="status:(WORKING OR QUEUED) AND substitutions.TRIGGER_NAME=$$TRIGGER" \
+            --sort-by="~createTime" --limit=1 \
+            --format="value(id,createTime)")
+
+          if [[ -n "$$BUILD_INFO" ]]; then
+            BUILD_ID=$$(echo "$$BUILD_INFO" | awk '{print $$1}')
+            BUILD_START=$$(echo "$$BUILD_INFO" | awk '{print $$2}')
+            echo "⏳ Waiting for $$TRIGGER build $$BUILD_ID started at $$BUILD_START..."
+
+            while true; do
+              STATUS=$$(gcloud builds describe $$BUILD_ID --region=asia-east1 --format="value(status)")
+              if [[ "$$STATUS" == "SUCCESS" || "$$STATUS" == "FAILURE" || "$$STATUS" == "CANCELLED" ]]; then
+                echo "🔹 $$TRIGGER build $$BUILD_ID finished with status $$STATUS"
+                break
+              fi
+              sleep 15
+            done
+
+            if [[ "$$STATUS" != "SUCCESS" ]]; then
+              echo "⚠️ $$TRIGGER failed/cancelled, aborting image creation."
+              exit 1
+            fi
+          fi
+        done
+
+        echo "✅ No earlier running triggers — safe to create image."
   # ==========================================
   # Step 5: Create image from MIG VM
   # ==========================================
