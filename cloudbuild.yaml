@@ -273,29 +273,33 @@ steps:
             gcloud compute instances delete "$$VM" --zone="$$ZONE" --quiet --delete-disks=all || true
           done
         fi
- - name: 'gcr.io/cloud-builders/bash'
-   id: check-cloud-function
-   entrypoint: bash
-   args:
-    - '-c'
-    - |
-      echo "Polling Cloud Function for VM startup status..."
-      for i in {1..30}; do
-        RESPONSE=$(curl -s https://function-613125347481.asia-south1.run.app)
-        STATUS=$(echo $RESPONSE | jq -r '.status')
-        if [[ "$STATUS" == "success" ]]; then
-          echo "✅ Deployment SUCCESS"
-          exit 0
-        elif [[ "$STATUS" == "failure" ]]; then
-          echo "❌ Deployment FAILURE"
-          exit 1
-        else
-          echo "Waiting for VM to report status..."
-          sleep 10
-        fi
-      done
-      echo "❌ Timeout waiting for VM startup script result"
-      exit 1
+
+  # ==========================================
+  # Step 8: Poll Cloud Function for VM startup status
+  # ==========================================
+  - name: 'gcr.io/cloud-builders/bash'
+    id: check-cloud-function
+    entrypoint: bash
+    args:
+      - '-c'
+      - |
+        echo "Polling Cloud Function for VM startup status..."
+        for i in {1..30}; do
+          RESPONSE=$(curl -s https://function-613125347481.asia-south1.run.app)
+          STATUS=$(echo $RESPONSE | jq -r '.status')
+          if [[ "$STATUS" == "success" ]]; then
+            echo "✅ Deployment SUCCESS"
+            exit 0
+          elif [[ "$STATUS" == "failure" ]]; then
+            echo "❌ Deployment FAILURE"
+            exit 1
+          else
+            echo "Waiting for VM to report status..."
+            sleep 10
+          fi
+        done
+        echo "❌ Timeout waiting for VM startup script result"
+        exit 1
 
 options:
   logging: CLOUD_LOGGING_ONLY
