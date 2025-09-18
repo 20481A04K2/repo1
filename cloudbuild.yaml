@@ -403,7 +403,6 @@ options:
   logging: CLOUD_LOGGING_ONLY
 substitutions:
   _TRIGGER_NAME: "trigger-1"
-  _WATCHED_TRIGGER_NAMES: "trigger-2,trigger-3,trigger-4"
   _MIG_NAME: "vamsi-mig"
   _ZONE: "asia-east1-b"
   _GITHUB_REPO: "20481A04K2/repo1"
