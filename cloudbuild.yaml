@@ -233,8 +233,8 @@ steps:
             gcloud compute scp startup-script.sh debian@$$VM:~/startup-script.sh \
             --zone=$${ZONE} \
             --quiet \
-            --ssh-flag="-o StrictHostKeyChecking=no" \
-            --ssh-flag="-o UserKnownHostsFile=/dev/null"
+            --scp-flag="-o StrictHostKeyChecking=no" \
+            --scp-flag="-o UserKnownHostsFile=/dev/null"
 
             echo "[SSH] Executing startup script on $$VM..."
             gcloud compute ssh debian@$$VM \
