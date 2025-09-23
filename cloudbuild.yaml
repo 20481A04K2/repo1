@@ -178,11 +178,12 @@ steps:
           echo "[SSH] No VMs found in MIG — exiting."
           exit 1
         fi
-
+        echo "[SSH] Found VMs: $$VM_LIST"
+        
 
         for VM in $$VM_LIST; do
           (
-         
+            echo "[SSH] Executing commands on $$VM..."
             gcloud compute ssh debian@$$VM \
             --zone=$${ZONE} \
             --quiet \
