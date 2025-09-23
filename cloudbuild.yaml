@@ -212,6 +212,9 @@ steps:
       - -c
       - |
         set -e
+        # Explicitly set MIG name and zone
+        MIG_NAME="${_MIG_NAME}"
+        ZONE="${_ZONE}"
         echo "[SSH] Fetching MIG VMs..."
         VM_LIST=$$(gcloud compute instance-groups managed list-instances $${_MIG_NAME} \
           --zone=$${_ZONE} --format="value(instance.basename())")
