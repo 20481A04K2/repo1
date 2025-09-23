@@ -232,7 +232,7 @@ steps:
 
             echo "[SSH] Executing startup script on $VM..."
             gcloud compute ssh $${VM} --zone=$${_ZONE} --quiet --command "bash ~/startup-script.sh"
-            echo "[SSH] Completed execution on $VM."
+            echo "[SSH] Completed execution on $$VM."
           ) &
         done
 
