@@ -193,7 +193,7 @@ steps:
               set -e
               echo "Installing Python and dependencies..."
               sudo apt-get update -y
-              sudo apt-get install -y python3 python3-pip unzip curl
+              sudo apt-get install -y python3 python3-pip unzip curl git
               mkdir -p ~/flask-app
               cd ~/flask-app
               git clone https://github.com/20481A04K2/repo1.git .
