@@ -23,52 +23,7 @@ steps:
       - https://github.com/${_GITHUB_REPO}.git
       - /workspace/app
 
-  # ==========================================
-  # Step 4: Write startup script to run Flask app
-  # ==========================================
-  - name: gcr.io/cloud-builders/gcloud
-    id: write-startup-script
-    entrypoint: bash
-    args:
-      - -c
-      - |
-        echo "[SCRIPT] Writing startup script..."
-        cat << 'EOF' > startup-script.sh
-        #!/bin/bash
-        set -e
-        echo "Installing Python and dependencies..."
-        sudo apt-get update -y
-        sudo apt-get install -y python3 python3-pip unzip curl
-        mkdir -p /home/ubuntu/flask-app
-        cd /home/ubuntu/flask-app
-        git clone https://github.com/20481A04K2/repo1.git .
-        python3 -m venv venv
-        source venv/bin/activate
-        sleep 2
-        echo "Installing Flask..."
-        pip install --upgrade pip
-        pip install flask
-        echo "Starting Flask app..."
-        nohup python app.py > flask.log 2>&1 &
-        # Check if Flask app started successfully
-        sleep 5
-        if pgrep -f "app.py" > /dev/null; then
-          STATUS="success"
-          echo "[STARTUP] Flask app started successfully."
-        else
-          STATUS="failure"
-          echo "[STARTUP] Flask app failed to start."
-        fi
-        # Trigger Cloud Function with status
-        CLOUD_FUNCTION_URL="https://function-613125347481.asia-south1.run.app"
-        curl -s -X POST "$$CLOUD_FUNCTION_URL" \
-        -H "Content-Type: application/json" \
-        -d "{\"status\":\"$$STATUS\", \"vm\":\"$$(hostname)\", \"pipeline\":\"my-pipeline\"}"
-        # Exit with proper code for Cloud Build
-        if [[ "$$STATUS" == "failure" ]]; then
-          exit 1
-        fi
-        EOF
+
   # ==========================================
   # Step 1: Wait logic for running triggers and MIG VM readiness
   # ==========================================
@@ -229,20 +184,33 @@ steps:
 
         for VM in $$VM_LIST; do
           (
-            echo "[SSH] Copying startup script to $$VM..."
-            gcloud compute scp startup-script.sh debian@$$VM:~/startup-script.sh \
-            --zone=$${ZONE} \
-            --quiet \
-            --scp-flag="-o StrictHostKeyChecking=no" \
-            --scp-flag="-o UserKnownHostsFile=/dev/null"
-
-            echo "[SSH] Executing startup script on $$VM..."
-            gcloud compute ssh debian@$$VM \
+         
+            gcloud compute ssh startup-script.sh debian@$$VM:~/startup-script.sh \
             --zone=$${ZONE} \
             --quiet \
             --ssh-flag="-o StrictHostKeyChecking=no" \
-            --ssh-flag="-o UserKnownHostsFile=/dev/null" \
-            --command "bash ~/startup-script.sh"
+            --ssh-flag="-o UserKnownHostsFile=/dev/null"
+            --command '
+              set -e
+              echo "Installing Python and dependencies..."
+              sudo apt-get update -y
+              sudo apt-get install -y python3 python3-pip unzip curl
+              mkdir -p ~/flask-app
+              cd ~/flask-app
+              git clone https://github.com/20481A04K2/repo1.git .
+              python3 -m venv venv
+              source venv/bin/activate
+              pip install --upgrade pip
+              pip install flask
+              echo "Starting Flask app..."
+              nohup python app.py > flask.log 2>&1 &
+              sleep 5
+              if pgrep -f "app.py" > /dev/null; then
+                echo "[CHECK] Flask app is running ✅"
+              else
+                echo "[CHECK] Flask app failed to start ❌"
+              fi
+            '
           ) &
         done
 
