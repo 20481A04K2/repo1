@@ -188,7 +188,7 @@ steps:
             --zone=$${ZONE} \
             --quiet \
             --ssh-flag="-o StrictHostKeyChecking=no" \
-            --ssh-flag="-o UserKnownHostsFile=/dev/null"
+            --ssh-flag="-o UserKnownHostsFile=/dev/null" \
             --command '
               set -e
               echo "Installing Python and dependencies..."
