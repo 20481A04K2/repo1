@@ -230,14 +230,14 @@ steps:
         for VM in $$VM_LIST; do
           (
             echo "[SSH] Copying startup script to $$VM..."
-            gcloud compute scp startup-script.sh debian@$VM:~/startup-script.sh \
+            gcloud compute scp startup-script.sh debian@$$VM:~/startup-script.sh \
             --zone=$${ZONE} \
             --quiet \
             --ssh-flag="-o StrictHostKeyChecking=no" \
             --ssh-flag="-o UserKnownHostsFile=/dev/null"
 
             echo "[SSH] Executing startup script on $$VM..."
-            gcloud compute ssh debian@$VM \
+            gcloud compute ssh debian@$$VM \
             --zone=$${ZONE} \
             --quiet \
             --ssh-flag="-o StrictHostKeyChecking=no" \
