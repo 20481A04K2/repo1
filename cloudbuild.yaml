@@ -185,7 +185,7 @@ steps:
         for VM in $$VM_LIST; do
           (
          
-            gcloud compute ssh startup-script.sh debian@$$VM:~/startup-script.sh \
+            gcloud compute ssh debian@$$VM \
             --zone=$${ZONE} \
             --quiet \
             --ssh-flag="-o StrictHostKeyChecking=no" \
