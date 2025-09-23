@@ -179,8 +179,6 @@ steps:
           exit 1
         fi
 
-        echo "[SSH] Found VMs: $$VM_LIST"
-        chmod +x startup-script.sh
 
         for VM in $$VM_LIST; do
           (
