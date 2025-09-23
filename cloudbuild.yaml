@@ -216,8 +216,8 @@ steps:
         MIG_NAME="${_MIG_NAME}"
         ZONE="${_ZONE}"
         echo "[SSH] Fetching MIG VMs..."
-        VM_LIST=$$(gcloud compute instance-groups managed list-instances $${_MIG_NAME} \
-          --zone=$${_ZONE} --format="value(instance.basename())")
+        VM_LIST=$$(gcloud compute instance-groups managed list-instances $${MIG_NAME} \
+          --zone=$${ZONE} --format="value(instance.basename())")
 
         if [[ -z "$$VM_LIST" ]]; then
           echo "[SSH] No VMs found in MIG — exiting."
@@ -231,10 +231,10 @@ steps:
           (
             echo "[SSH] Copying startup script to $$VM..."
             gcloud compute scp startup-script.sh $${VM}:~/startup-script.sh \
-              --zone=$${_ZONE} --quiet
+              --zone=$${ZONE} --quiet
 
             echo "[SSH] Executing startup script on $$VM..."
-            gcloud compute ssh $${VM} --zone=$${_ZONE} --quiet --command "bash ~/startup-script.sh"
+            gcloud compute ssh $${VM} --zone=$${ZONE} --quiet --command "bash ~/startup-script.sh"
             echo "[SSH] Completed execution on $$VM."
           ) &
         done
