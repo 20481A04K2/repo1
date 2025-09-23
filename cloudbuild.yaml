@@ -184,7 +184,7 @@ steps:
         for VM in $$VM_LIST; do
           (
             echo "[SSH] Executing commands on $$VM..."
-            gcloud compute ssh debian@$$VM \
+            gcloud compute ssh sajja_vamsi@$$VM \
             --zone=$${ZONE} \
             --quiet \
             --ssh-flag="-o StrictHostKeyChecking=no" \
